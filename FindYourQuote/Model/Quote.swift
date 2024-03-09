@@ -1,6 +1,8 @@
 import Foundation
 
-struct Quote: Decodable {
+typealias Quote = [QuoteElement]
+
+struct QuoteElement: Decodable {
     
     var quote: String
     var author: String

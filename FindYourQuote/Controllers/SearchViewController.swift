@@ -12,7 +12,7 @@ class SearchViewController: UIViewController {
         searchController.isActive && !searchBarIsEmpty
     }
     private var searchBarIsEmpty: Bool {
-        guard let text = searchController.searchBar.text else { return false}
+        guard let text = searchController.searchBar.text else { return false }
         return text.isEmpty
     }
     
@@ -39,12 +39,6 @@ class SearchViewController: UIViewController {
         
         view.addSubview(tableView)
     }
-    
-    private func goToResultViewController() {
-        let resultVC = ResultViewController()
-        self.navigationController?.present(resultVC, animated: true)
-    }
-    
 }
 
 // MARK: - Setup Constraints
@@ -89,7 +83,24 @@ extension SearchViewController: UISearchResultsUpdating {
 extension SearchViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        goToResultViewController()
+        self.showLoadingView()
+        let category = isFiltering ? filteredQuotesArray[indexPath.row] : categories[indexPath.row]
+        
+        NetworkManager.shared.fetchQuote(category: category) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let data):
+                self.dismissLoadingView()
+                DispatchQueue.main.async {
+                    let resultVC = ResultViewController(quoteLabelText: data[0].quote, authorLabelText: data[0].author)
+                    
+                    self.navigationController?.present(resultVC, animated: true)
+                }
+            case .failure(let error):
+                self.dismissLoadingView()
+                print(error.rawValue)
+            }
+        }
     }
 }
 
